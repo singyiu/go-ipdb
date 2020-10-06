@@ -1,0 +1,90 @@
+syntax = "proto3";
+package ipdb.pb;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/struct.proto";
+
+message Result {
+    int32 code = 2;
+    string str = 3;
+}
+
+message Identity {
+    bytes signature = 1;
+}
+
+message SchemaDetail {
+    string schemaType = 1;
+    bytes schemaData = 2;
+    bytes schemaMetaData = 3;
+}
+
+message RegisterSchemaRequest {
+    Identity requester = 1;
+    SchemaDetail schemaDetail = 2;
+}
+
+message RegisterSchemaReply {
+    Result result = 1;
+    bytes schemaHash = 2;
+}
+
+message GetSchemaDetailRequest {
+    Identity requester = 1;
+    bytes schemaHash = 2;
+}
+
+message GetSchemaDetailReply {
+    Result result = 1;
+    SchemaDetail schemaDetail = 2;
+}
+
+message DataRecord {
+    bytes schemaHash = 1;
+    Identity publishedBy = 2;
+    google.protobuf.Timestamp publishedAt = 3;
+    google.protobuf.Struct dataStruct = 4;
+}
+
+message PublishRequest {
+    Identity requester = 1;
+    bytes schemaHash = 2;
+    google.protobuf.Struct dataStruct = 3;
+}
+
+message PublishReply {
+    Result result = 1;
+}
+
+message SubscribeRequest {
+    Identity requester = 1;
+    bytes schemaHash = 2;
+}
+
+message DataRecordReply {
+    Result result = 1;
+    DataRecord dataRecord = 2;
+}
+
+message QueryDetail {
+    bytes schemaHash = 1;
+    google.protobuf.Struct queryStruct = 2;
+}
+
+message QueryRequest {
+    Identity requester = 1;
+    QueryDetail queryDetail = 2;
+}
+
+message QueryReply {
+    Result result = 1;
+    repeated DataRecord dataRecords = 2;
+}
+
+service API {
+    rpc RegisterSchema(RegisterSchemaRequest) returns (RegisterSchemaReply) {}
+    rpc GetSchemaDetail(GetSchemaDetailRequest) returns (GetSchemaDetailReply) {}
+    rpc Publish(PublishRequest) returns (PublishReply) {}
+    rpc Subscribe(SubscribeRequest) returns (stream DataRecordReply) {}
+    rpc Query(QueryRequest) returns (QueryReply) {}
+}
