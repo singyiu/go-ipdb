@@ -3,12 +3,15 @@ package multischema
 import (
 	"errors"
 	"github.com/multiformats/go-multihash"
+	"github.com/singyiu/go-ipdb/pkg/multischema/validator"
+	jsonschemavalidator "github.com/singyiu/go-ipdb/pkg/multischema/validator/json"
 	"golang.org/x/crypto/sha3"
 )
 
 // errors
 var (
 	ErrUnknownType      = errors.New("multischema type not supported yet")
+	ErrSchemaNotConfrontedToValidator = errors.New("schema not confronted to validator")
 )
 
 // constants
@@ -39,10 +42,16 @@ func EncodePayloadToMultiHash(payload []byte) ([]byte, error) {
 
 //EncodeToSchemaHash returns SchemaHash in the format of <SchemaCode 1 byte><Multihash>
 func EncodeToSchemaHash(schemaType string, payload []byte) ([]byte, error) {
+	var schemaValidator validator.SchemaValidator
+
 	switch schemaType {
 	case "json":
+		schemaValidator = jsonschemavalidator.SchemaValidator(payload)
 	default:
 		return nil, ErrUnknownType
+	}
+	if !schemaValidator.IsSchemaValid() {
+		return nil, ErrSchemaNotConfrontedToValidator
 	}
 
 	schemaCode, ok := TypeToCodeMap[schemaType]
