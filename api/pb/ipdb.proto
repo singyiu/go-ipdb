@@ -14,9 +14,12 @@ message Identity {
 }
 
 message SchemaDetail {
-    string schemaType = 1;
-    bytes schemaData = 2;
-    bytes schemaMetaData = 3;
+    bytes sId = 1;
+    string type = 2;
+    bytes data = 3;
+    bytes metaData = 4;
+    bytes createdBy = 5;
+    google.protobuf.Timestamp updatedAt = 6;
 }
 
 message RegisterSchemaRequest {
@@ -26,12 +29,12 @@ message RegisterSchemaRequest {
 
 message RegisterSchemaReply {
     Result result = 1;
-    bytes schemaHash = 2;
+    SchemaDetail schemaDetail = 2;
 }
 
 message GetSchemaDetailRequest {
     Identity requester = 1;
-    bytes schemaHash = 2;
+    bytes sId = 2;
 }
 
 message GetSchemaDetailReply {
@@ -40,15 +43,15 @@ message GetSchemaDetailReply {
 }
 
 message DataRecord {
-    bytes schemaHash = 1;
+    bytes sId = 1;
     Identity publishedBy = 2;
-    google.protobuf.Timestamp publishedAt = 3;
+    google.protobuf.Timestamp updatedAt = 3;
     google.protobuf.Struct dataStruct = 4;
 }
 
 message PublishRequest {
     Identity requester = 1;
-    bytes schemaHash = 2;
+    bytes sId = 2;
     google.protobuf.Struct dataStruct = 3;
 }
 
@@ -58,7 +61,7 @@ message PublishReply {
 
 message SubscribeRequest {
     Identity requester = 1;
-    bytes schemaHash = 2;
+    bytes sId = 2;
 }
 
 message DataRecordReply {
@@ -67,7 +70,7 @@ message DataRecordReply {
 }
 
 message QueryDetail {
-    bytes schemaHash = 1;
+    bytes sId = 1;
     google.protobuf.Struct queryStruct = 2;
 }
 
