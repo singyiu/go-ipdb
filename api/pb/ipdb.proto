@@ -44,15 +44,15 @@ message GetSchemaDetailReply {
 
 message DataRecord {
     bytes sId = 1;
-    Identity publishedBy = 2;
-    google.protobuf.Timestamp updatedAt = 3;
-    google.protobuf.Struct dataStruct = 4;
+    bytes payload = 2;
+    //Identity publishedBy = 3;
+    //google.protobuf.Timestamp updatedAt = 4;
 }
 
 message PublishRequest {
     Identity requester = 1;
     bytes sId = 2;
-    google.protobuf.Struct dataStruct = 3;
+    bytes payload = 3;
 }
 
 message PublishReply {

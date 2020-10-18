@@ -16,3 +16,5 @@
 
 .idea/
 api/pb/ipdb.pb.go
+
+cmd/ipdb/ipdb

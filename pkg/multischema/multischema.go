@@ -40,8 +40,8 @@ func EncodePayloadToMultiHash(payload []byte) ([]byte, error) {
 	return multihash.EncodeName(rawHash, "sha3")
 }
 
-//EncodeToSchemaHash returns SchemaHash in the format of <SchemaCode 1 byte><Multihash>
-func EncodeToSchemaHash(schemaType string, payload []byte) ([]byte, error) {
+//EncodeToSchemaId returns SchemaHash in the format of <SchemaCode 1 byte><Multihash>
+func EncodeToSchemaId(schemaType string, payload []byte) (SchemaId, error) {
 	var schemaValidator validator.SchemaValidator
 
 	switch schemaType {

@@ -1,6 +1,6 @@
 package validator
 
 type SchemaValidator interface {
-	AreFieldNamesUpperCase() bool
+	//AreFieldNamesUpperCase() bool
 	IsSchemaValid() bool
 }

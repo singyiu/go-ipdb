@@ -10,10 +10,11 @@ import (
 	ma "github.com/multiformats/go-multiaddr"
 	"github.com/singyiu/go-ipdb/pkg/common"
 	"github.com/singyiu/go-ipdb/pkg/model"
-	"github.com/textileio/go-threads/api/client"
-	"github.com/textileio/go-threads/core/thread"
-	"github.com/textileio/go-threads/db"
-	"github.com/textileio/go-threads/util"
+	"github.com/singyiu/go-ipdb/pkg/multischema"
+	"github.com/singyiu/go-threads/api/client"
+	"github.com/singyiu/go-threads/core/thread"
+	"github.com/singyiu/go-threads/db"
+	"github.com/singyiu/go-threads/util"
 	"google.golang.org/grpc"
 	"io/ioutil"
 	"log"
@@ -31,8 +32,6 @@ type ClientStruct struct {
 	Token thread.Token
 }
 
-//test bafk5ibp7tq5iel4cw7wtnrv27h6dj3zn543fgatnj5cb5qjmz3jtr7y
-//bafkqin6miovgsfvgibzxzoyu6fxxgixmmgj2hbh746nirh4lah3cmxi
 func NewClientStruct(baseThreadIdStr string) (*ClientStruct, error) {
 	var err error
 	cs := ClientStruct{}
@@ -69,12 +68,14 @@ func NewClientStruct(baseThreadIdStr string) (*ClientStruct, error) {
 	}
 	log.Printf("dbs: %+v", dbs)
 
+	/*
 	key, err := LoadPrivateKeyFromPemFile("privatekey.pem")
 	if err != nil {
 		return nil, err
 	}
 	cs.Identity = thread.NewLibp2pIdentity(key)
 	cs.Token, err = cs.Client.GetToken(context.Background(), cs.Identity)
+	*/
 
 	return &cs, nil
 }
@@ -113,7 +114,7 @@ func LoadPrivateKeyFromPemFile(fileName string) (crypto.PrivKey, error) {
 	return crypto.UnmarshalPrivateKey(pemBlock.Bytes)
 }
 
-func (cs *ClientStruct) CreateDb() (db.Info, error) {
+func (cs *ClientStruct) CreateBaseDb() (db.Info, error) {
 	log.Printf("Creating DB with threadID: %+v", cs.BaseThreadId)
 	err := cs.Client.NewDB(context.Background(), cs.BaseThreadId)
 	if err != nil {
@@ -122,7 +123,7 @@ func (cs *ClientStruct) CreateDb() (db.Info, error) {
 	return cs.Client.GetDBInfo(context.Background(), cs.BaseThreadId)
 }
 
-func (cs *ClientStruct) CreateCollection() error {
+func (cs *ClientStruct) CreateBaseCollection() error {
 	log.Printf("Creating SchemaRecord collection")
 	reflector := jsonschema.Reflector{}
 	schemaRecordSchema := reflector.Reflect(&model.SchemaRecord{}) // Generate a JSON Schema from a struct
@@ -141,7 +142,37 @@ func (cs *ClientStruct) CreateCollection() error {
 	return err
 }
 
-func (cs *ClientStruct) RegisterSchema(record model.SchemaRecord) error {
-	_, err := cs.Client.Create(context.Background(), cs.BaseThreadId, CollectionNameSchemaRecord, client.Instances{&record})
+func (cs *ClientStruct) RegisterSchema(ctx context.Context, record model.SchemaRecord) error {
+	//create the schema record in CollectionNameSchemaRecord
+	_, err := cs.Client.Create(ctx, cs.BaseThreadId, CollectionNameSchemaRecord, client.Instances{&record})
+	if err != nil {
+		return common.Errorf(err, "cs.Client.Create failed")
+	}
+
+	//create a collection with the target schema, and name it with the hex string of its sId
+	jsonSchema, err := record.GetJsonSchema()
+	if err != nil {
+		return common.Errorf(err, "record.GetJsonSchema failed")
+	}
+	sIdCollectionName := fmt.Sprintf("%X", record.SId)
+	err = cs.Client.NewCollection(ctx, cs.BaseThreadId, db.CollectionConfig{
+		Name:    sIdCollectionName,
+		Schema:  jsonSchema,
+	})
 	return err
+}
+
+func (cs *ClientStruct) PublishPayload(ctx context.Context, sId multischema.SchemaId, payload []byte) (string, error) {
+	instanceIds, err := cs.Client.CreateInstanceWithPayload(ctx, cs.BaseThreadId, sId.String(), [][]byte{payload})
+	if err != nil || len(instanceIds) == 0{
+		return "", common.Errorf(err, "cs.Client.CreateInstanceWithPayload failed")
+	}
+	return instanceIds[0], nil
+}
+
+func (cs *ClientStruct) Close() {
+	err := cs.Client.Close()
+	if err != nil {
+		log.Fatalf("cs.Client.Close failed: %v", err)
+	}
 }

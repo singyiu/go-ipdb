@@ -1,14 +1,17 @@
 package threadshelper_test
 
 import (
+	"context"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/singyiu/go-ipdb/api"
+	"github.com/singyiu/go-ipdb/pkg/multischema/exampleschema"
 	. "github.com/singyiu/go-ipdb/pkg/threadshelper"
 	"log"
 )
 
 var _ = Describe("Threadshelper", func() {
-	testBaseThreadIdStr := "bafk5ibp7tq5iel4cw7wtnrv27h6dj3zn543fgatnj5cb5qjmz3jtr7y"
+	testBaseThreadIdStr := api.DefaultBaseThreadIdStr
 	testKeyFileName := "test.pem"
 
 	var testClientStruct *ClientStruct
@@ -34,17 +37,26 @@ var _ = Describe("Threadshelper", func() {
 			Expect(testClientStruct.Client).ShouldNot(BeNil())
 		})
 	})
-	XDescribe("CreateDb", func() {
+	XDescribe("CreateBaseDb", func() {
 		It("should create the db correctly", func() {
-			dbInfo, err := testClientStruct.CreateDb()
+			dbInfo, err := testClientStruct.CreateBaseDb()
 			Expect(err).Should(BeNil())
 			Expect(dbInfo).ShouldNot(BeNil())
 			log.Printf("dbInfo: %+v", dbInfo)
 		})
 	})
-	XDescribe("CreateCollection", func() {
+	XDescribe("CreateBaseCollection", func() {
 		It("should create the collection correctly", func() {
-			err := testClientStruct.CreateCollection()
+			err := testClientStruct.CreateBaseCollection()
+			Expect(err).Should(BeNil())
+		})
+	})
+	Describe("PublishPayload", func() {
+		It("should publish the payload correctly", func() {
+			dataStruct := exampleschema.GetExampleSensorDataStruct()
+			payload, err := dataStruct.Bytes()
+			Expect(err).Should(BeNil())
+			_, err = testClientStruct.PublishPayload(context.Background(), exampleschema.GetSensorDataSId(), payload)
 			Expect(err).Should(BeNil())
 		})
 	})
